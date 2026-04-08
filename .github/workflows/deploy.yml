@@ -25,3 +25,28 @@ jobs:
             # Pull the latest changes from GitHub to the server
             git pull origin main
             echo "Deployment successful!"
+            script: |
+            # 1. Navigate to the web root
+            cd /var/www/html
+
+            # 2. Ensure Git is initialized in the ROOT, not a subfolder
+            if [ ! -d ".git" ]; then
+              echo "Initializing repository in /var/www/html..."
+              git init
+              git remote add origin https://github.com/${{ github.repository }}.git
+            fi
+
+            # 3. Fetch and Force Reset (This overwrites any local mess with the GitHub code)
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 4. Clean up any accidental subfolders if they exist
+            # (Matches the folder name you saw earlier)
+            rm -rf Github_Action_Project/ Github_Action_pipeline/
+
+            # 5. Fix Permissions so Nginx can always read the files
+            sudo chown -R $USER:www-data /var/www/html
+            sudo find /var/www/html -type d -exec chmod 755 {} \;
+            sudo find /var/www/html -type f -exec chmod 644 {} \;
+
+            echo "Deployment Complete and Permissions Fixed!"
