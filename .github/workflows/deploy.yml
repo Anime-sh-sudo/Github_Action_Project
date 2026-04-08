@@ -26,27 +26,28 @@ jobs:
             git pull origin master
             echo "Deployment successful!"
             script: |
-            # 1. Navigate to the web root
+            # 1. Enter the directory
             cd /var/www/html
 
-            # 2. Ensure Git is initialized in the ROOT, not a subfolder
+            # 2. If .git is missing, set it up from scratch
             if [ ! -d ".git" ]; then
-              echo "Initializing repository in /var/www/html..."
+              echo "No git repo found. Initializing..."
               git init
               git remote add origin https://github.com/${{ github.repository }}.git
             fi
 
-            # 3. Fetch and Force Reset (This overwrites any local mess with the GitHub code)
+            # 3. Mark this directory as safe (Required by newer Git versions)
+            git config --global --add safe.directory /var/www/html
+
+            # 4. Fetch the absolute latest from GitHub
+            # IMPORTANT: Ensure this is 'master' if that's what you are pushing to!
             git fetch origin master
+
+            # 5. Overwrite EVERYTHING in /var/www/html with the GitHub version
             git reset --hard origin/master
 
-            # 4. Clean up any accidental subfolders if they exist
-            # (Matches the folder name you saw earlier)
-            rm -rf Github_Action_Project/ Github_Action_pipeline/
-
-            # 5. Fix Permissions so Nginx can always read the files
+            # 6. Fix permissions so Nginx can see it
             sudo chown -R $USER:www-data /var/www/html
-            sudo find /var/www/html -type d -exec chmod 755 {} \;
-            sudo find /var/www/html -type f -exec chmod 644 {} \;
+            sudo chmod -R 755 /var/www/html
 
-            echo "Deployment Complete and Permissions Fixed!"
+            echo "Deployment Complete!"
