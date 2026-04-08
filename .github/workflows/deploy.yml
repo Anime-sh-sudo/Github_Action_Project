@@ -23,7 +23,7 @@ jobs:
             echo "Successfully connected to WSL"
             cd /var/www/html
             # Pull the latest changes from GitHub to the server
-            git pull origin main
+            git pull origin master
             echo "Deployment successful!"
             script: |
             # 1. Navigate to the web root
