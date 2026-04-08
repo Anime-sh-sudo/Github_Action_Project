@@ -37,8 +37,8 @@ jobs:
             fi
 
             # 3. Fetch and Force Reset (This overwrites any local mess with the GitHub code)
-            git fetch origin main
-            git reset --hard origin/main
+            git fetch origin master
+            git reset --hard origin/master
 
             # 4. Clean up any accidental subfolders if they exist
             # (Matches the folder name you saw earlier)
