@@ -1,0 +1,27 @@
+name: Deploy Static Website
+
+on:
+  push:
+    branches:
+      - main  # Triggers the pipeline every time you push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to WSL via SSH Tunnel
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          port: ${{ secrets.SERVER_PORT }} # The port provided by Pinggy
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            echo "Successfully connected to WSL"
+            cd /var/www/html
+            # Pull the latest changes from GitHub to the server
+            git pull origin main
+            echo "Deployment successful!"
