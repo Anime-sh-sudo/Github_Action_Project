@@ -3,7 +3,7 @@ name: Deploy Static Website
 on:
   push:
     branches:
-      - master  # Triggers the pipeline every time you push to the main branch
+      - master
 
 jobs:
   deploy:
@@ -16,38 +16,30 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_IP }}
-          port: ${{ secrets.SERVER_PORT }} # The port provided by Pinggy
+          port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            echo "Successfully connected to WSL"
             cd /var/www/html
-            # Pull the latest changes from GitHub to the server
-            git pull origin master
-            echo "Deployment successful!"
-            script: |
-            # 1. Enter the directory
-            cd /var/www/html
-
-            # 2. If .git is missing, set it up from scratch
+            
+            # Ensure the directory is safe
+            git config --global --add safe.directory /var/www/html
+            
+            # Setup Git if missing
             if [ ! -d ".git" ]; then
-              echo "No git repo found. Initializing..."
               git init
               git remote add origin https://github.com/${{ github.repository }}.git
             fi
-
-            # 3. Mark this directory as safe (Required by newer Git versions)
-            git config --global --add safe.directory /var/www/html
-
-            # 4. Fetch the absolute latest from GitHub
-            # IMPORTANT: Ensure this is 'master' if that's what you are pushing to!
+            
+            # Sync code
             git fetch origin master
-
-            # 5. Overwrite EVERYTHING in /var/www/html with the GitHub version
             git reset --hard origin/master
-
-            # 6. Fix permissions so Nginx can see it
-            sudo chown -R $USER:www-data /var/www/html
+            
+            # Clean subfolders
+            rm -rf Github_Action_Project/ Github_Action_pipeline/
+            
+            # Fix Permissions (using sudo without password)
+            sudo chown -R ${{ secrets.SERVER_USERNAME }}:www-data /var/www/html
             sudo chmod -R 755 /var/www/html
-
-            echo "Deployment Complete!"
+            
+            echo "CI/CD Pipeline Finished Successfully!"
