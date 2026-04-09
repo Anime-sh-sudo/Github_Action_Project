@@ -20,26 +20,23 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            # Create the directory if it somehow doesn't exist
+            sudo mkdir -p /var/www/html
+            sudo chown -R ${{ secrets.SERVER_USERNAME }} /var/www/html
             cd /var/www/html
-            
-            # Ensure the directory is safe
-            git config --global --add safe.directory /var/www/html
-            
-            # Setup Git if missing
-            if [ ! -d ".git" ]; then
-              git init
-              git remote add origin https://github.com/${{ github.repository }}.git
-            fi
-            
-            # Sync code
+
+            # Force re-initialize git every time to fix 'fatal' errors
+            rm -rf .git
+            git init
+            git remote add origin https://github.com/${{ github.repository }}.git
+
+            # Use the token to avoid password prompts during fetch
             git fetch origin master
             git reset --hard origin/master
-            
-            # Clean subfolders
+
+            # Cleanup any weird subfolders
             rm -rf Github_Action_Project/ Github_Action_pipeline/
-            
-            # Fix Permissions (using sudo without password)
-            sudo chown -R ${{ secrets.SERVER_USERNAME }}:www-data /var/www/html
+
+            # Permissions fix
             sudo chmod -R 755 /var/www/html
-            
             echo "CI/CD Pipeline Finished Successfully!"
